@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Police Inventory Management System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --police-blue: #1a2a44;
+  --police-navy: #0f1c2e;
+  --police-gold: #c5a059;
+  --danger-red: #c82333;
+  --success-green: #28a745;
+  --bg-light: #f4f6f9;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+body {
+  margin: 0;
+  font-family: 'Sarabun', sans-serif;
+  background: var(--bg-light);
+  color: #333;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, var(--police-navy), var(--police-blue));
+  color: #fff;
+  padding: 12px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 4px solid var(--police-gold);
+  box-shadow: var(--shadow-sm);
+}
+
+.header h2 { margin: 0; font-size: 20px; letter-spacing: 0.5px; }
+#userInfo { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+/* ===== Buttons General ===== */
+button {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'Sarabun';
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.btn-primary { background: var(--police-blue); color: #fff; }
+.btn-danger { background: var(--danger-red); color: #fff; }
+.btn-success { background: var(--success-green); color: #fff; }
+.btn-secondary { background: #e9ecef; color: #333; border: 1px solid #ddd; }
+
+/* ===== Layout ===== */
+.container { padding: 25px 40px; max-width: 1400px; margin: auto; }
+
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+
+/* ===== Admin Panel Grid ===== */
+.admin-add {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.input-group { display: flex; flex-direction: column; gap: 4px; }
+.input-group label { font-size: 12px; font-weight: 600; color: var(--police-blue); }
+
+input {
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+input:focus { outline: none; border-color: var(--police-gold); box-shadow: 0 0 0 3px rgba(197,160,89,0.15); }
+
+/* ===== Search Box ===== */
+.search-box { position: relative; margin-bottom: 25px; }
+#searchInput {
+  width: 100%;
+  padding: 14px 14px 14px 45px;
+  box-sizing: border-box;
+  font-size: 15px;
+  border-radius: 50px;
+  border: 1px solid #ddd;
+  box-shadow: var(--shadow-sm);
+}
+.search-box::before { content: '🔍'; position: absolute; left: 18px; top: 14px; font-size: 18px; }
+
+/* ===== Table ===== */
+.table-card { overflow-x: auto; border-radius: 12px; box-shadow: var(--shadow-sm); background: #fff; }
+table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+th { background: #f8f9fa; color: var(--police-blue); padding: 15px; font-size: 13px; border-bottom: 2px solid #eee; }
+td { padding: 14px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; }
+tr:hover { background-color: #fcfdfe; }
+.status-pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; background: #f0f2f5; font-weight: 600; }
+
+/* ===== Premium Modal & Save Button ===== */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 28, 46, 0.75);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  max-width: 480px;
+  width: 90%;
+  margin: 5vh auto;
+  padding: 30px;
+  border-radius: 20px;
+  position: relative;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin: 0 0 20px 0;
+  color: var(--police-blue);
+  border-bottom: 2px solid var(--police-gold);
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ปุ่มบันทึกการแก้ไขแบบพรีเมียม */
+.btn-save-edit {
+  width: 100%;
+  margin-top: 25px;
+  padding: 15px !important;
+  background: linear-gradient(135deg, #1a2a44 0%, #2a5298 100%) !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 20px rgba(26, 42, 68, 0.3);
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.btn-save-edit:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 10px 25px rgba(26, 42, 68, 0.4);
+  filter: brightness(1.2);
+}
+
+.btn-save-edit:active { transform: translateY(0); }
+
+.close { position: absolute; right: 20px; top: 20px; cursor: pointer; font-size: 26px; color: #bbb; transition: 0.2s; }
+.close:hover { color: var(--danger-red); }
+
+/* กระชับพื้นที่ใน Modal */
+.modal-content .input-group { margin-bottom: 14px; }
+.modal-content input { padding: 11px; border-radius: 10px; background: #fafafa; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>
+    <h2>🛡️ ระบบบริหารจัดการคลังพัสดุ</h2>
+    <div id="userInfo">กำลังดึงข้อมูลเจ้าหน้าที่...</div>
+  </div>
+  <div style="display:flex; gap:12px;">
+    <button onclick="exportCSV()" class="btn-success">📊 ส่งออก Excel</button>
+    <button onclick="logout()" class="btn-danger">🚪 ออกจากระบบ</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="adminPanel" class="card">
+    <div style="margin-bottom:15px; font-weight:600; color:var(--police-blue); border-left: 4px solid var(--police-gold); padding-left: 10px;">
+      ลงทะเบียนพัสดุใหม่เข้าคลัง
+    </div>
+    <div class="admin-add">
+      <div class="input-group"><label>เลขคุรุภัณฑ์</label><input id="asset_number" placeholder="เช่น สลน.01/67"></div>
+      <div class="input-group"><label>ชื่อพัสดุ</label><input id="item_name" placeholder="ชื่อรายการ"></div>
+      <div class="input-group"><label>ประเภท</label><input id="category" placeholder="ระบุประเภท"></div>
+      <div class="input-group"><label>จำนวน</label><input id="quantity" type="number" value="1"></div>
+      <div class="input-group"><label>ต้นทาง</label><input id="source_station" placeholder="หน่วยงานส่งมอบ"></div>
+      <div class="input-group"><label>หมายเหตุ</label><input id="remark" placeholder="ระบุเพิ่มเติม"></div>
+      <div class="input-group"><label>วันที่รับ</label><input id="received_date" type="date"></div>
+      <button onclick="addItem()" class="btn-primary" style="height: 42px;">💾 บันทึก</button>
+    </div>
+  </div>
+
+  <div class="search-box">
+    <input id="searchInput" placeholder="ค้นหาพัสดุด้วย เลขคุรุภัณฑ์, ชื่อ, ประเภท หรือหมายเหตุ..." onkeyup="renderTable()">
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>เลขคุรุภัณฑ์</th>
+          <th>รายการ</th>
+          <th>ประเภท</th>
+          <th>จำนวน</th>
+          <th>ต้นทาง</th>
+          <th>หมายเหตุ</th>
+          <th>วันที่รับพัสดุ</th>
+          <th id="actionHeader">จัดการข้อมูล</th>
+        </tr>
+      </thead>
+      <tbody id="itemsTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">×</span>
+    <h3>📝 แก้ไขรายละเอียดพัสดุ</h3>
+    <input type="hidden" id="edit_id">
+    
+    <div class="input-group"><label>หมายเลขคุรุภัณฑ์</label><input id="edit_asset_number"></div>
+    <div class="input-group"><label>ชื่อพัสดุ</label><input id="edit_item_name"></div>
+    <div class="input-group"><label>ประเภท</label><input id="edit_category"></div>
+    <div class="input-group"><label>จำนวน</label><input id="edit_quantity" type="number"></div>
+    <div class="input-group"><label>หน่วยงานต้นทาง</label><input id="edit_source_station"></div>
+    <div class="input-group"><label>หมายเหตุ</label><input id="edit_remark"></div>
+    <div class="input-group"><label>วันที่รับพัสดุ</label><input id="edit_received_date" type="date"></div>
+
+    <button onclick="updateItem()" class="btn-save-edit">
+      <span>💾</span> ยืนยันการบันทึกข้อมูล
+    </button>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:3000/api/items";
+const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+const username = localStorage.getItem("username");
+
+if(!token) location.href = "login.html";
+document.getElementById("userInfo").innerText = `เจ้าหน้าที่ผู้ปฏิบัติงาน: ${username} | สิทธิ์: ${role}`;
+
+if(role !== "admin") {
+  document.getElementById("adminPanel").style.display = "none";
+  document.getElementById("actionHeader").style.display = "none";
+}
+
+let currentItems = [];
+
+function formatDate(d) {
+  if(!d) return "-";
+  return new Date(d).toLocaleDateString("th-TH", { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+async function loadItems() {
+  try {
+    const res = await fetch(API, { headers: { Authorization: "Bearer " + token } });
+    currentItems = await res.json();
+    renderTable();
+  } catch(e) { console.error("Data fetch failed"); }
+}
+
+function renderTable() {
+  const keyword = document.getElementById("searchInput").value.toLowerCase();
+  const tableBody = document.getElementById("itemsTable");
+  tableBody.innerHTML = "";
+
+  currentItems
+  .filter(i => 
+    (i.asset_number||"").toLowerCase().includes(keyword) ||
+    (i.item_name||"").toLowerCase().includes(keyword) ||
+    (i.category||"").toLowerCase().includes(keyword) ||
+    (i.source_station||"").toLowerCase().includes(keyword) ||
+    (i.remark||"").toLowerCase().includes(keyword)
+  )
+  .forEach(i => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="font-weight:bold; color:var(--police-blue)">${i.asset_number||"-"}</td>
+      <td style="text-align:left; font-weight:400;">${i.item_name}</td>
+      <td><span class="status-pill">${i.category}</span></td>
+      <td><b style="color:var(--police-blue)">${i.quantity}</b></td>
+      <td>${i.source_station||"-"}</td>
+      <td style="color:#666; font-size:13px italic">${i.remark||"-"}</td>
+      <td>${formatDate(i.received_date)}</td>
+      ${role === "admin" ? 
+      `<td>
+        <button class="btn-secondary" style="padding:5px 10px; font-size:12px" onclick='openEdit(${JSON.stringify(i)})'>แก้ไข</button>
+        <button class="btn-danger" style="padding:5px 10px; font-size:12px" onclick='deleteItem(${i.id})'>ลบ</button>
+      </td>` : ""}
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+async function addItem() {
+  const data = {
+    asset_number: document.getElementById("asset_number").value,
+    item_name: document.getElementById("item_name").value,
+    category: document.getElementById("category").value,
+    quantity: document.getElementById("quantity").value,
+    source_station: document.getElementById("source_station").value,
+    remark: document.getElementById("remark").value,
+    received_date: document.getElementById("received_date").value
+  };
+  if(!data.item_name) return alert("กรุณาระบุชื่อพัสดุ");
+
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    body: JSON.stringify(data)
+  });
+  
+  ["asset_number","item_name","category","source_station","remark","received_date"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("quantity").value = "1";
+  loadItems();
+}
+
+function openEdit(i) {
+  document.getElementById("edit_id").value = i.id;
+  document.getElementById("edit_asset_number").value = i.asset_number || "";
+  document.getElementById("edit_item_name").value = i.item_name;
+  document.getElementById("edit_category").value = i.category;
+  document.getElementById("edit_quantity").value = i.quantity;
+  document.getElementById("edit_source_station").value = i.source_station || "";
+  document.getElementById("edit_remark").value = i.remark || "";
+  document.getElementById("edit_received_date").value = i.received_date ? i.received_date.split("T")[0] : "";
+  document.getElementById("editModal").style.display = "block";
+}
+
+function closeModal() { document.getElementById("editModal").style.display = "none"; }
+
+async function updateItem() {
+  const id = document.getElementById("edit_id").value;
+  const data = {
+    asset_number: document.getElementById("edit_asset_number").value,
+    item_name: document.getElementById("edit_item_name").value,
+    category: document.getElementById("edit_category").value,
+    quantity: document.getElementById("edit_quantity").value,
+    source_station: document.getElementById("edit_source_station").value,
+    remark: document.getElementById("edit_remark").value,
+    received_date: document.getElementById("edit_received_date").value
+  };
+
+  await fetch(`${API}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+    body: JSON.stringify(data)
+  });
+  closeModal();
+  loadItems();
+}
+
+async function deleteItem(id) {
+  if(!confirm("⚠️ ยืนยันการลบรายการพัสดุนี้?")) return;
+  await fetch(`${API}/${id}`, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+  loadItems();
+}
+
+function exportCSV() {
+  const ws = XLSX.utils.json_to_sheet(currentItems);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Police_Inventory");
+  XLSX.writeFile(wb, "รายงานคลังพัสดุ_" + new Date().toISOString().split('T')[0] + ".xlsx");
+}
+
+function logout() { localStorage.clear(); location.href = "login.html"; }
+
+// Initial Load
+loadItems();
+</script>
+</body>
+</html>
