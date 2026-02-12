@@ -2,6 +2,8 @@
 
 เข้า backend แล้วพิมพ์ npm install
 
-ดับเบิลคลิก Start_System.vbs
+เข้าไฟล์ startandstop 
+ดับเบิลคลิก Start_System.vbs เพื่อเริ่ม   
+ดับเบิลคลิก Stop_System.vbsเพื่อจบ 
 
 จบ ✅
