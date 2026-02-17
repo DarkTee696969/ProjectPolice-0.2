@@ -1,7 +1,7 @@
-ติดตั้ง Node.js
+ติดตั้ง Node.js ในเครื่อง
 
 เข้า backend แล้วพิมพ์ npm install
-
+ตัวไฟล์ที่โหลดมา ชื่อต้องแก้ไขเป็น ProjectPolice ไฟล์ต้องอยู่ในได D
 เข้าไฟล์ startandstop 
 ดับเบิลคลิก Start_System.vbs เพื่อเริ่ม   
 ดับเบิลคลิก Stop_System.vbsเพื่อจบ 
